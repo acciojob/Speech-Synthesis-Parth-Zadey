@@ -7,12 +7,14 @@ const stopButton = document.querySelector('#stop');
 const textArea = document.querySelector('[name="text"]');
 
 // Initialize text
-msg.text = textArea ? textArea.value : '';
+msg.text = textArea ? textArea.value.trim() : '';
 
 function populateVoices() {
   voices = speechSynthesis.getVoices();
   voicesDropdown.innerHTML = voices
-    .map(voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`)
+    .map(
+      voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`
+    )
     .join('');
 }
 
@@ -27,11 +29,12 @@ function setVoice() {
 function toggle(startOver = true) {
   speechSynthesis.cancel();
 
+  // Always sync with current textarea value if present
   if (textArea) {
     msg.text = textArea.value;
   }
 
-  // Prevent speech if text is empty or only whitespace
+  // Strictly block empty string or whitespace-only input
   if (!msg.text || msg.text.trim().length === 0) {
     return;
   }
@@ -59,8 +62,13 @@ options.forEach(option => {
   option.addEventListener('input', setOption);
 });
 
-speakButton.addEventListener('click', () => toggle(true));
-stopButton.addEventListener('click', () => toggle(false));
+speakButton.addEventListener('click', () => {
+  toggle(true);
+});
 
-// Immediate initial call
+stopButton.addEventListener('click', () => {
+  toggle(false);
+});
+
+// Initial population call
 populateVoices();
