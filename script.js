@@ -4,7 +4,6 @@ const voicesDropdown = document.querySelector('[name="voice"]');
 const options = document.querySelectorAll('[type="range"], [name="text"]');
 const speakButton = document.querySelector('#speak');
 const stopButton = document.querySelector('#stop');
-
 const textArea = document.querySelector('[name="text"]');
 
 // Initialize text
@@ -12,23 +11,22 @@ msg.text = textArea ? textArea.value : '';
 
 function populateVoices() {
   voices = speechSynthesis.getVoices();
-  voicesDropdown.innerHTML = '<option value="">Select A Voice</option>' +
-    voices
-      .map(
-        voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`
-      )
-      .join('');
+  voicesDropdown.innerHTML = voices
+    .map(voice => `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`)
+    .join('');
 }
 
 function setVoice() {
-  msg.voice = voices.find(voice => voice.name === this.value);
+  const selectedVoice = voices.find(voice => voice.name === this.value);
+  if (selectedVoice) {
+    msg.voice = selectedVoice;
+  }
   toggle();
 }
 
 function toggle(startOver = true) {
   speechSynthesis.cancel();
-  
-  // Update text from textarea to ensure latest content is used
+
   if (textArea) {
     msg.text = textArea.value;
   }
@@ -44,15 +42,25 @@ function toggle(startOver = true) {
 }
 
 function setOption() {
-  msg[this.name] = this.value;
+  if (this.name === 'rate' || this.name === 'pitch') {
+    msg[this.name] = parseFloat(this.value);
+  } else {
+    msg[this.name] = this.value;
+  }
   toggle();
 }
 
+// Event Listeners
 speechSynthesis.addEventListener('voiceschanged', populateVoices);
 voicesDropdown.addEventListener('change', setVoice);
-options.forEach(option => option.addEventListener('change', setOption));
+
+options.forEach(option => {
+  option.addEventListener('change', setOption);
+  option.addEventListener('input', setOption);
+});
+
 speakButton.addEventListener('click', () => toggle(true));
 stopButton.addEventListener('click', () => toggle(false));
 
-// Populate immediately if voices are already loaded
+// Immediate initial call
 populateVoices();
